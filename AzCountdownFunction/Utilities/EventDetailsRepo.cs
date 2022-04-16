@@ -2,8 +2,13 @@
 using FuncCountdown.DTOs;
 using FuncCountdown.Interfaces;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace FuncCountdown.Utilities
@@ -12,37 +17,33 @@ namespace FuncCountdown.Utilities
     {
         private readonly IMapper _mapper;
         private readonly ILogger _log;
+        private JsonDBContext _dbContext;
 
-        public EventDetailsRepo(ILogger log, IMapper maper) { _mapper = maper; _log = log; }
+        public EventDetailsRepo(ILogger log, IMapper maper) 
+        { 
+            _mapper = maper; 
+            _log = log ?? ApplicationLogger.logger;
+            _dbContext = new JsonDBContext();
+        }
+        
         public async Task<DTOs.EventDetails> GetEventDetailsByName(int userID, string eventName)
         {
-            var entity = CreateDummyEvent();
-            return _mapper.Map<DTOs.EventDetails>(entity);
+            var entity = _dbContext.UserEvents.First(x => x.nUserID == userID 
+                                    && x.szEventName.Equals(eventName, StringComparison.InvariantCultureIgnoreCase));
+
+            return await Task.FromResult(_mapper.Map<DTOs.EventDetails>(entity));
+            //return _mapper.Map<DTOs.EventDetails>(entity);
         }
 
-        public async Task<Dictionary<DateTime, string>> GetPublicHolidays()
+        public async Task<SortedDictionary<DateTime, string>> GetPublicHolidays()
         {
-            return await GetHardcodedHolidays();
+            return await GetHolidays();
         }
 
-        public async Task<Dictionary<DateTime, string>> GetHardcodedHolidays()
+        public async Task<SortedDictionary<DateTime, string>> GetHolidays()
         {
-            Dictionary<DateTime, string> holidays = new();
-            holidays.Add(new DateTime(2022, 4, 14), "Ramzan");
-            holidays.Add(new DateTime(2022, 4, 15), "Ambedkar Jayanti");
-
+            var holidays = _dbContext.Holidays;
             return await Task.FromResult(holidays);
-        }
-
-        public static EventDetailsEntity CreateDummyEvent()
-        {
-            return new()
-            {
-                nUserID = 1,
-                szEventName = "TEST_EVENT",
-                szEventDate = System.DateTime.Today.AddDays(20).ToString("ddMMyyyy"),
-                dtCreatedDTS = System.DateTime.Now
-            };
         }
 
     }

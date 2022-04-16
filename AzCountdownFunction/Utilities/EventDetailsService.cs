@@ -22,21 +22,29 @@ namespace FuncCountdown.Utilities
         private const int DEFAULT_EVENT_USERID = 1;
         private const string DEFAULT_EVENT_NAME = "TEST_EVENT";
 
-        public EventDetailsService(ILogger logger, IMapper mapper) : this(logger, mapper, null) { }
-
         public EventDetailsService(ILogger log, IMapper mapper, IEventDetailsRepository repo)
         {
             _mapper = mapper;
-            _log = log;
-            _eventRepo = repo?? new EventDetailsRepo(_log, _mapper);
+            _eventRepo = repo;
+            _log = log ?? ApplicationLogger.logger;
         }
 
-        public async Task<EventDetailsDto> CalculateCountdown()
+        public EventDetailsMinifiedDto GetFilteredEventDetails(EventDetailsDto eventDetails)
         {
-            return await CalculateCountdown(DEFAULT_EVENT_USERID, DEFAULT_EVENT_NAME);
+            return new EventDetailsMinifiedDto(eventDetails.EventName,
+                eventDetails.EventDTS.ToString("dd-MM-yyyy"),
+                eventDetails.Remaining_Days,
+                eventDetails.CurrentDate.ToString("dd-MM-yyyy"));
         }
 
-        public async Task<EventDetailsDto> CalculateCountdown(int userID, string eventName)
+        public async Task<EventDetailsDto> CalculateCountdown(
+            int userID = DEFAULT_EVENT_USERID, 
+            string eventName = DEFAULT_EVENT_NAME)
+        {
+            return await CalculateEventCountdown(userID > 0 ? userID : DEFAULT_EVENT_USERID, eventName ?? DEFAULT_EVENT_NAME);
+        }
+
+        public async Task<EventDetailsDto> CalculateEventCountdown(int userID, string eventName)
         {
             _log.LogInformation($"Calculating countdown for {userID}-{eventName}");
             var CurrentDate = System.DateTime.Today;
@@ -55,7 +63,7 @@ namespace FuncCountdown.Utilities
                 eventDetails.Weekdays = daysOfWeek.Item1;
                 eventDetails.Weekends = daysOfWeek.Item2;
 
-                eventDetails.UpcomingHolidays = GetHolidays(dictPublicHolidays, CurrentDate, out var holidayNames);
+                eventDetails.UpcomingHolidays = GetHolidays(dictPublicHolidays, CurrentDate, eventDetails.EventDTS, out var holidayNames);
                 eventDetails.HolidayNameList = holidayNames;
 
                 _log.LogInformation($"Countdown Calculation Completed for {userID}-{eventName}");
@@ -92,18 +100,31 @@ namespace FuncCountdown.Utilities
         }
 
         /// <returns>Returns number of upcomingHolidays</returns>
-        public static int GetHolidays(Dictionary<DateTime, string> dictHolidays, DateTime holidaysUptoDate, out List<string> holidayNames)
+        public static int GetHolidays(SortedDictionary<DateTime, string> dictHolidays, 
+            DateTime fromDate, DateTime toDate, out List<string> holidayNames)
         {
+            var holidaysToConsider = dictHolidays.Where(h => h.Key >= fromDate && h.Key <= toDate);
+
             holidayNames = new();
             int upcomingHolidays = 0;
+            string holidayPrefix;
 
-            foreach (var holiday in dictHolidays)
+            foreach (var holiday in holidaysToConsider)
             {
-                if (holidaysUptoDate <= holiday.Key)
+                //Check if Holiday Falls on weekend
+                switch (holiday.Key.DayOfWeek)
                 {
-                    holidayNames.Add($"{holiday.Key:D} - {holiday.Value}");
-                    upcomingHolidays++;
+                    case DayOfWeek.Saturday:
+                    case DayOfWeek.Sunday:
+                        holidayPrefix = " [Falls on Weekend]";
+                        break;
+                    default:
+                        holidayPrefix = "";
+                        upcomingHolidays++;
+                        break;
                 }
+
+                holidayNames.Add($"{holiday.Key:D} - {holiday.Value}{holidayPrefix}");
             }
 
             return upcomingHolidays;

@@ -21,7 +21,7 @@ namespace FuncCountdown.DTOs
         public List<string> HolidayNameList { get; set; }
         public List<KeyValuePair<DateTime, string>> HolidayList { get; set; }
 
-        public DateTime EventDTS => DateTime.ParseExact(EventDate, "ddMMyyyy", CultureInfo.InvariantCulture);
+        public DateTime EventDTS => DateTime.ParseExact(EventDate, "yyyyMMdd", CultureInfo.InvariantCulture);
 
         public DateTime CurrentDate => DateTime.Today;
     }

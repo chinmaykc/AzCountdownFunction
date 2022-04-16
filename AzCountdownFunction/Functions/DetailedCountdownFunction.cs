@@ -9,36 +9,39 @@ using System.Threading.Tasks;
 
 namespace FuncCountdown.Functions
 {
-    public class CountdownFunction
+    public class DetailedCountdownFunction
     {
         private readonly IEventDetailsService _eventService;
         private readonly IMapper _mapper;
 
-        public CountdownFunction(IEventDetailsService eventService, IMapper mapper)
+        public DetailedCountdownFunction(IEventDetailsService eventService, IMapper mapper)
         {
             _eventService = eventService;
             _mapper = mapper;
         }
 
-        [FunctionName("GetCountdown")]
+        [FunctionName("GetCountDown_v2")]
+        //public async Task<IActionResult> Run(
+        //    [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "v2/GetCountDown/{id}/{eventName}")] HttpRequest req,
+        //    string id,
+        //    string eventName,
+        //    ILogger log)
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "v2/GetCountDown")] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("GetCountdown function triggered");
+            log.LogInformation("GetCountDown_v2 function triggered");
 
             int.TryParse(req.Query["id"], out int userID);
             string eventName = req.Query["event"];
 
-            var eventDetails = await _eventService.CalculateCountdown(userID, eventName);
+            var resp = await _eventService.CalculateCountdown(userID, eventName);
 
-            if (eventDetails != null)
-            {
-                var resp = _eventService.GetFilteredEventDetails(eventDetails);
+            if (resp != null)
                 return new OkObjectResult(resp);
-            }
             else
                 return new NotFoundObjectResult("Event not found");
         }
     }
 }
+

@@ -8,6 +8,6 @@ namespace FuncCountdown.Interfaces
     public interface IEventDetailsRepository
     {
         public Task<EventDetails> GetEventDetailsByName(int userID, string eventName);
-        public Task<Dictionary<DateTime, string>> GetPublicHolidays();
+        public Task<SortedDictionary<DateTime, string>> GetPublicHolidays();
     }
 }

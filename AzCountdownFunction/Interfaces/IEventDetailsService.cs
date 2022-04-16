@@ -9,7 +9,7 @@ namespace FuncCountdown.Interfaces
 {
     public interface IEventDetailsService
     {
-        public Task<EventDetailsDto> CalculateCountdown();
         public Task<EventDetailsDto> CalculateCountdown(int userID, string eventName);
+        public EventDetailsMinifiedDto GetFilteredEventDetails(EventDetailsDto eventDetails);
     }
 }

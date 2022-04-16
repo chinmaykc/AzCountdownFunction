@@ -9,7 +9,7 @@ namespace FuncCountdown.DTOs
 {
     public class EventDetailsDto
     {
-        [JsonProperty("event", Order = 1)]
+        [JsonProperty("eventName", Order = 1)]
         public string EventName { get; set; }
 
         [JsonProperty("eventDate", Order = 2)]
@@ -67,4 +67,6 @@ namespace FuncCountdown.DTOs
     }
     #endregion
 
+
+    public record EventDetailsMinifiedDto(string EventName, string EventDate, int TotalDaysLeft, string Today);
 }

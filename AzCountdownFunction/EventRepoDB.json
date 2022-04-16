@@ -1,0 +1,18 @@
+{
+  "Events": [
+    {
+      "nUserID": "1",
+      "szEventName": "TEST_EVENT",
+      "szEventDate": "20220510"
+    },
+    {
+      "nUserID": "1",
+      "szEventName": "TEST_EVENT_2",
+      "szEventDate": "20220512"
+    }
+  ],
+  "Holidays": {
+    "2022-04-20": "Holiday 1",
+    "2022-04-22": "Holiday 2"
+  }
+}
